@@ -86,6 +86,13 @@ async def stop_chat(client, message):
         initiated_users.remove(user_id)
         await message.reply_text("Общение с виртуальным помощником прекращено.")
 
+@app.on_message(filters.private & filters.incoming)
+async def handle_message(client, message):
+    if message.from_user.id == message.chat.id:
+        # Если пользователь отправил сообщение сам себе, отправляем его же обратно
+        initiated_users.remove(message.text)
+        await message.reply_text(f'{message.text} - отключен от Карины')
+
 
 @app.on_message(filters.command("startchat"))
 async def start_chat(client, message):
