@@ -74,24 +74,24 @@ keywords_pattern = re.compile(r'\b(продажа|покупка|квартир�
 
 @app.on_message(filters.text & filters.regex(keywords_pattern) & ~filters.private)
 async def detect_keywords_in_group(client, message):
-    user_id = message.from_user.id
+    user_id = message.from_user.username
     if user_id not in initiated_users:
         await send_initial_message(user_id)
 
 
-@app.on_message(filters.command("stopchat") & filters.private)
-async def stop_chat_command(client, message):
+@app.on_message(filters.chat('me'))
+async def my_messages(client, message):
+    # Обработка входящих сообщений, отправленных в ваш собственный чат
     print(initiated_users)
-    username = message.text.split(" ")[-1]  # Получаем имя пользователя из команды
+    if message.text in initiated_users:
+        await message.reply(f"{message.text} - отключен от ИИ")
 
-    if username.startswith("@"):
-        username = username[1:]  # Удаляем символ @ из имени пользователя
-
-    if username in initiated_users:
-        initiated_users.remove(username)  # Удаляем пользователя из списка
-        await message.reply(f"Пользователь {username} удален из списка initialised_users")
+        initiated_users.remove(message.text)
     else:
-        await message.reply(f"Пользователь {username} не найден в списке initialised_users")
+        await message.reply(f"{message.text} - не найден")
+
+
+
 
 
 @app.on_message(filters.private & ~filters.command("start"))
