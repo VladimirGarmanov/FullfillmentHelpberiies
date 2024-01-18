@@ -79,27 +79,19 @@ async def detect_keywords_in_group(client, message):
         await send_initial_message(user_id)
 
 
-@app.on_message(filters.command("stopchat"))
-async def stop_chat(client, message):
-    user_id = message.from_user.id
-    if user_id in initiated_users:
-        initiated_users.remove(user_id)
-        await message.reply_text("Общение с виртуальным помощником прекращено.")
+@app.on_message(filters.command("stopchat") & filters.private)
+async def stop_chat_command(client, message):
+    print(initiated_users)
+    username = message.text.split(" ")[-1]  # Получаем имя пользователя из команды
 
-@app.on_message(filters.private & filters.incoming)
-async def handle_message(client, message):
-    if message.from_user.id == message.chat.id:
-        # Если пользователь отправил сообщение сам себе, отправляем его же обратно
-        initiated_users.remove(message.text)
-        await message.reply_text(f'{message.text} - отключен от Карины')
+    if username.startswith("@"):
+        username = username[1:]  # Удаляем символ @ из имени пользователя
 
-
-@app.on_message(filters.command("startchat"))
-async def start_chat(client, message):
-    user_id = message.from_user.id
-    if user_id not in initiated_users:
-        initiated_users.add(user_id)
-        await message.reply_text("Общение с виртуальным помощником возобновлено.")
+    if username in initiated_users:
+        initiated_users.remove(username)  # Удаляем пользователя из списка
+        await message.reply(f"Пользователь {username} удален из списка initialised_users")
+    else:
+        await message.reply(f"Пользователь {username} не найден в списке initialised_users")
 
 
 @app.on_message(filters.private & ~filters.command("start"))
