@@ -32,7 +32,7 @@ initiated_users = set()
 
 
 async def send_initial_message(user_id):
-    await app.send_message(user_id, """Кстати, я квартиру продаю, не знаешь, контакты кому нужна квартира?""")
+    await app.send_message(user_id, """это ты про квартиру спрашивал? В нашем ЖК ищешь? Я продаю как раз""")
     initiated_users.add(user_id)
 
 
@@ -40,7 +40,8 @@ def create_prompt(user_id):
     messages = chat_sessions[user_id]['messages']
     prompt = [
         {"role": "system",
-         "content": """Я Карина, девушка 25-30 лет, живу в этом ЖК, продаю квартиру"""}
+         "content": """Я девушка 25-30 лет, живу в этом ЖК, продаю квартиру,
+"""}
 
     ]
     prompt.extend(messages)
@@ -68,30 +69,31 @@ async def handle_chat_with_gpt(user_id, message):
 
 
 # Регулярное выражение для определения ключевых слов
-keywords_pattern = re.compile(r'\b(продажа|покупка|квартира|ипотека|арендовать|снять|ЛСР|по первой очереди|ук|гис|жкх|официальное уведомление| жилищно-коммунальные услуги)\b',
+keywords_pattern = re.compile(r'\b(продажа|покупка|квартира|ипотека|арендовать|снять|ЛСР|по первой очереди|ук|гис|жкх|официальное уведомление|жилищно-коммунальные услуги)\b',
                               re.IGNORECASE)
 
 
 @app.on_message(filters.text & filters.regex(keywords_pattern) & ~filters.private)
 async def detect_keywords_in_group(client, message):
-    user_id = message.from_user.username
+    user_id = message.from_user.id
     if user_id not in initiated_users:
         await send_initial_message(user_id)
 
 
-@app.on_message(filters.chat('me'))
-async def my_messages(client, message):
-    # Обработка входящих сообщений, отправленных в ваш собственный чат
-    print(initiated_users)
-    if message.text in initiated_users:
-        await message.reply(f"{message.text} - отключен от ИИ")
-
-        initiated_users.remove(message.text)
-    else:
-        await message.reply(f"{message.text} - не найден")
+@app.on_message(filters.command("stopchat"))
+async def stop_chat(client, message):
+    user_id = message.from_user.id
+    if user_id in initiated_users:
+        initiated_users.remove(user_id)
+        await message.reply_text("Общение с виртуальным помощником прекращено.")
 
 
-
+@app.on_message(filters.command("startchat"))
+async def start_chat(client, message):
+    user_id = message.from_user.id
+    if user_id not in initiated_users:
+        initiated_users.add(user_id)
+        await message.reply_text("Общение с виртуальным помощником возобновлено.")
 
 
 @app.on_message(filters.private & ~filters.command("start"))
