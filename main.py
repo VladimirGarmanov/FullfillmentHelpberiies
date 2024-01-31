@@ -27,7 +27,7 @@ initiated_users = set()
 
 async def send_initial_message(user_id):
     await app.send_message(user_id, """Здравствуйте! Я виртуальный помощник компании Фулфилмент Helpberries. Чем могу помочь?""")
-    with open("path_to_price.pdf", "rb") as file:
+    with open("price.pdf", "rb") as file:
         pdf_file = file.read()
 
     # Создаем объект InputFile для файла
